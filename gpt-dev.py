@@ -72,6 +72,8 @@ print(xb)
 print("targents")
 print(yb)
 
+random_matrix = jax.random.uniform(jax.random.PRNGKey(0), (3, 3))
+
 
 # Define a bigram model
 class Bigram(nn.Module):
@@ -112,3 +114,13 @@ rng_key, subkey = jax.random.split(jax.random.PRNGKey(rng_seed))
 params = m.init(subkey, jnp.zeros((batch_size, block_size), jnp.int32))
 logits, loss = m.apply(params, xb, targets=yb)
 print(logits.shape, loss)
+
+
+# Dumbest possible attention: just average the embeddings
+def attention(logits):
+    B, T, C = logits.shape
+    masking_matrix = jnp.tril(jnp.ones((T, T)))
+    averaging_masking_matrix = (
+        masking_matrix / jnp.sum(masking_matrix, axis=1)[:, jnp.newaxis]
+    )
+    return jnp.matmul(logits, averaging_masking_matrix)
