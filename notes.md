@@ -10,4 +10,4 @@ https://www.youtube.com/watch?v=eMlx5fFNoYc
   - In multi-headed attention, we keep separate Q/K/V matrices for each head. 
   - Afterwards, we're left with one matrix per attention head. We train an additional weight matrix that puts them all together. 
   - Positional encoding: A vector added to the token embeddings that adds information about the order of the word
-  - 
+- Just implemented a very simple attention mechanism where, for every batch, for every element of the batch, I compute the average of all the embeddings up to and including the element. I think that in the real thing. The weight matrix is currently a lower triangular matrix where each row is scaled such that it computes an average, but I think that in the real thing we will also train these weights. Not sure where self-attention falls into all this yet. 
