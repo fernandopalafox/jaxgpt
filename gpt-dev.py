@@ -121,6 +121,9 @@ def attention(logits):
     B, T, C = logits.shape
     masking_matrix = jnp.tril(jnp.ones((T, T)))
     averaging_masking_matrix = (
-        masking_matrix / jnp.sum(masking_matrix, axis=1)[:, jnp.newaxis]
+        masking_matrix / jnp.sum(masking_matrix, axis=1)
     )
-    return jnp.matmul(logits, averaging_masking_matrix)
+    return jnp.matmul(averaging_masking_matrix, logits) # numpy adds a leading dimension
+
+test_attention = attention(logits)
+print(test_attention.shape)
