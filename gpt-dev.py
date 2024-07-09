@@ -8,6 +8,7 @@ train_val_split = 0.9
 block_size = 8  # length of each sequence
 batch_size = 4  # number of sequences in each batch
 rng_seed = 0
+n_embed = 32
 
 with open("data/input.txt", "r", encoding="utf-8") as f:
     text = f.read()
@@ -77,15 +78,20 @@ random_matrix = jax.random.uniform(jax.random.PRNGKey(0), (3, 3))
 
 # Define a bigram model
 class Bigram(nn.Module):
-    vocab_size: int
-
     def setup(self):
-        self.embedding = nn.Embed(self.vocab_size, self.vocab_size)
+        self.embedding = nn.Embed(vocab_size, n_embed)
+        self.position_embedding = nn.Embed(block_size, n_embed)
+        self.lm_head = nn.Dense(features=vocab_size, use_bias=False)
 
     def __call__(self, indices, targets=None):
-        logits = self.embedding(
+        token_embs = self.embedding(
             indices
-        )  # (batch_size, block_size, vocab_size)
+        )  # (batch_size, block_size, n_embed)
+        position_embs = self.position_embedding(
+            jnp.arange(block_size)
+        )
+        x = token_embs + position_embs
+        logits = self.lm_head(x)  # (batch_size, block_size, vocab_size)
 
         if targets is None:
             loss = None
@@ -109,7 +115,7 @@ class Bigram(nn.Module):
 
 
 # Initialize the model
-m = Bigram(vocab_size)
+m = Bigram()
 rng_key, subkey = jax.random.split(jax.random.PRNGKey(rng_seed))
 params = m.init(subkey, jnp.zeros((batch_size, block_size), jnp.int32))
 logits, loss = m.apply(params, xb, targets=yb)
